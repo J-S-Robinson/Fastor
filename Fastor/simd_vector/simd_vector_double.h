@@ -182,8 +182,8 @@ struct SIMDVector<double, simd_abi::avx512> {
     FASTOR_INLINE SIMDVector<double,simd_abi::avx512> reverse() {
         return _mm512_reverse_pd(value);
     }
-    // FASTOR_INLINE double minimum() {return _mm512_hmin_pd(value);}
-    // FASTOR_INLINE double maximum() {return _mm512_hmax_pd(value);}
+    FASTOR_INLINE double minimum() {return _mm512_hmin_pd(value);}
+    FASTOR_INLINE double maximum() {return _mm512_hmax_pd(value);}
 
     FASTOR_INLINE double dot(const SIMDVector<double,simd_abi::avx512> &other) {
         __m512d res =  _mm512_mul_pd(value,other.value);

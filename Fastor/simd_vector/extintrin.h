@@ -526,6 +526,13 @@ FASTOR_INLINE double _mm256_hmax_pd(__m256d a) {
     return _mm_cvtsd_f64(_mm256_castpd256_pd128(_mm256_max_pd(max0,tmp)));
 }
 #endif
+#ifdef FASTOR_AVX512F_IMPL
+FASTOR_INLINE double _mm512_hmax_pd(__m512d a) {
+    __m256d lo = _mm512_castpd512_pd256(a);
+    __m256d hi = _mm512_extractf64x4_pd (a,0x1);
+    return std::fmax( _mm256_hmax_pd(lo),_mm256_hmax_pd(hi));
+}
+#endif
 //----------------------------------------------------------------------------------------------------------------//
 
 
@@ -563,6 +570,13 @@ FASTOR_INLINE double _mm256_hmin_pd(__m256d a) {
     __m256d max0 = _mm256_min_pd(a,_mm256_reverse_pd(a));
     __m256d tmp = _mm256_shuffle_pd(max0,max0,_MM_SHUFFLE(0,0,0,1));
     return _mm_cvtsd_f64(_mm256_castpd256_pd128(_mm256_min_pd(max0,tmp)));
+}
+#endif
+#ifdef FASTOR_AVX512F_IMPL
+FASTOR_INLINE double _mm512_hmin_pd(__m512d a) {
+    __m256d lo = _mm512_castpd512_pd256(a);
+    __m256d hi = _mm512_extractf64x4_pd (a,0x1);
+    return std::fmin( _mm256_hmin_pd(lo),_mm256_hmin_pd(hi));
 }
 #endif
 //----------------------------------------------------------------------------------------------------------------//
