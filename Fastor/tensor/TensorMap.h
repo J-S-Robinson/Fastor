@@ -21,6 +21,7 @@ public:
     using simd_abi_type    = typename simd_vector_type::abi_type;
     using result_type      = Tensor<remove_all_t<T>,Rest...>;
     using dimension_t      = std::integral_constant<FASTOR_INDEX, sizeof...(Rest)>;
+    static constexpr FASTOR_INLINE bool is_aligned() { return false; };
     static constexpr FASTOR_INLINE FASTOR_INDEX rank() {return sizeof...(Rest);}
     static constexpr FASTOR_INLINE FASTOR_INDEX size() {return pack_prod<Rest...>::value;}
     FASTOR_INLINE FASTOR_INDEX dimension(FASTOR_INDEX dim) const {
@@ -148,19 +149,19 @@ FASTOR_INLINE void assign(AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Re
     trivial_assign(dst.self(),src);
 }
 template<typename Derived, size_t DIM, typename T, size_t ...Rest>
-FASTOR_INLINE void assign_add(const AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
+FASTOR_INLINE void assign_add(AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
     trivial_assign_add(dst.self(),src);
 }
 template<typename Derived, size_t DIM, typename T, size_t ...Rest>
-FASTOR_INLINE void assign_sub(const AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
+FASTOR_INLINE void assign_sub(AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
     trivial_assign_sub(dst.self(),src);
 }
 template<typename Derived, size_t DIM, typename T, size_t ...Rest>
-FASTOR_INLINE void assign_mul(const AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
+FASTOR_INLINE void assign_mul(AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
     trivial_assign_mul(dst.self(),src);
 }
 template<typename Derived, size_t DIM, typename T, size_t ...Rest>
-FASTOR_INLINE void assign_div(const AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
+FASTOR_INLINE void assign_div(AbstractTensor<Derived,DIM> &dst, const TensorMap<T,Rest...> &src) {
     trivial_assign_div(dst.self(),src);
 }
 

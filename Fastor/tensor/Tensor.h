@@ -23,6 +23,13 @@ public:
     using simd_abi_type    = typename simd_vector_type::abi_type;
     using result_type      = Tensor<T,Rest...>;
     using dimension_t      = std::integral_constant<FASTOR_INDEX, sizeof...(Rest)>;
+    static constexpr FASTOR_INLINE bool is_aligned() {
+#if defined(FASTOR_DONT_ALIGN) || defined(FASTOR_DONT_VECTORISE)
+        return false;
+#else
+        return memory_alignment_v<T> == FASTOR_MEMORY_ALIGNMENT_VALUE;
+#endif
+    };
     static constexpr FASTOR_INLINE FASTOR_INDEX rank() {return sizeof...(Rest);}
     static constexpr FASTOR_INLINE FASTOR_INDEX size() {return pack_prod<Rest...>::value;}
     FASTOR_INLINE FASTOR_INDEX dimension(FASTOR_INDEX dim) const {
@@ -49,8 +56,17 @@ public:
 
     // Constructor from a scalar
     template<typename U=T, enable_if_t_<is_primitive_v_<U>,bool> = false>
-    FASTOR_INLINE Tensor(U num) {
+    constexpr FASTOR_INLINE Tensor(U num) {
+#ifdef FASTOR_ZERO_INITIALISE
+        // This is for compile time initialisation, so it is fine
+        scalar_type cnum = (scalar_type)num;
+        FASTOR_INDEX i = 0;
+        for (; i<size(); ++i) {
+            _data[i] = cnum;
+        }
+#else
         assign(*this, num);
+#endif
     }
 
     // Initialiser list constructors

@@ -14,45 +14,75 @@ void run() {
     {
         Tensor<T,4,5> a; a.iota(1);
         TensorMap<T,4,5> ma(a);
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma +=1;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma(all,0) = 2;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma(fall,fall) = 2;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma = a - ma;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         a.iota(1);
         ma *= a/ma + 2;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
     }
 
     {
         Tensor<T,2,4,5> a; a.iota(1);
         TensorMap<T,2,4,5> ma(a);
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma +=1;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma(0,all,0) = 2;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma(fseq<0,1>{},fall,fall) = 3;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         ma = a - ma;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
 
         a.iota(1);
         ma *= a/ma + 2;
-        FASTOR_EXIT_ASSERT(std::abs(a.sum() - ma.sum()) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(a.sum() - ma.sum()) < Tol);
+    }
+
+    // Compound assignment operators.
+    {
+        Tensor<T,4,5> src;
+        src = 3;
+        TensorMap<T,4,5> msrc(src);
+        Tensor<T,4,5> dst;
+        dst = 0;
+        Tensor<T,4,5> check;
+
+        // +=
+        check = 3;
+        dst += msrc;
+        FASTOR_DOES_CHECK_PASS(all_of(dst == check));
+
+        // *=
+        check = 9;
+        dst *= msrc;
+        FASTOR_DOES_CHECK_PASS(all_of(dst == check));
+
+        // -=
+        check = 6;
+        dst -= msrc;
+        FASTOR_DOES_CHECK_PASS(all_of(dst == check));
+
+        // /=
+        check = 2;
+        dst /= msrc;
+        FASTOR_DOES_CHECK_PASS(all_of(dst == check));
     }
 
     // Map a const array and copy-assign it to a non-const tensor.
@@ -62,7 +92,7 @@ void run() {
         Tensor<T, 3> tdata = mdata;
         Tensor<T, 3> check{1, 2, 3};
 
-        FASTOR_EXIT_ASSERT(all_of(tdata == check));
+        FASTOR_DOES_CHECK_PASS(all_of(tdata == check));
     }
 
     // Bug 116
@@ -72,7 +102,7 @@ void run() {
         Tensor<T,2,1> b;
         b = {{1},{1}};
         A(fseq<0,2>(),fseq<1,2>()) = b;
-        FASTOR_EXIT_ASSERT(std::abs(sum(A) - 6) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(sum(A) - 6) < Tol);
     }
 
     // Bug 117 - standard tensor arithmetic with const tensormap
@@ -85,7 +115,7 @@ void run() {
         const auto res0 = evaluate( a + b );
         const auto res1 = evaluate( a - b );
         const auto res2 = evaluate( a * b );
-        FASTOR_EXIT_ASSERT(std::abs(res1.sum() + 28 ) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(res1.sum() + 28 ) < Tol);
     }
 
     // Bug 132 - add 1D tensormaps, outer tensormaps
@@ -97,10 +127,35 @@ void run() {
         TensorMap<double,3> bt(b.data());
 
         Tensor<double,3> ct = bt + at;
-        FASTOR_EXIT_ASSERT(std::abs(ct.sum() - 9 ) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(ct.sum() - 9 ) < Tol);
 
         Tensor<double,3,3> dt = outer(at, bt);
-        FASTOR_EXIT_ASSERT(std::abs(dt.sum() - 18 ) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(dt.sum() - 18 ) < Tol);
+    }
+
+    // Bug 139 - memory alignment issue in assignment operators
+    {
+        std::vector<std::array<T,3>> vec_arr(5,{1,2,3});
+
+        for(size_t i = 1; i< vec_arr.size(); ++i)
+        {
+            TensorMap<T,3> arr_tens_map_stat(vec_arr[0].data());
+            TensorMap<T,3> arr_tens_map_var(vec_arr[i].data());
+            Tensor<T,3> tens = {7,8,9};
+            arr_tens_map_stat -= tens;
+            arr_tens_map_var += tens;
+        }
+
+        FASTOR_DOES_CHECK_PASS(std::abs(vec_arr[0][0] + 27 ) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(vec_arr[0][1] + 30 ) < Tol);
+        FASTOR_DOES_CHECK_PASS(std::abs(vec_arr[0][2] + 33 ) < Tol);
+
+        for(size_t i = 1; i < vec_arr.size(); ++i)
+        {
+            FASTOR_DOES_CHECK_PASS(std::abs(vec_arr[i][0] -  8 ) < Tol);
+            FASTOR_DOES_CHECK_PASS(std::abs(vec_arr[i][1] - 10 ) < Tol);
+            FASTOR_DOES_CHECK_PASS(std::abs(vec_arr[i][2] - 12 ) < Tol);
+        }
     }
 
     print(FGRN(BOLD("All tests passed successfully")));

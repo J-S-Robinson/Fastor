@@ -32,7 +32,7 @@ SOFTWARE.
 //------------------------------------------------------------------------------------------------//
 #define FASTOR_MAJOR 0
 #define FASTOR_MINOR 6
-#define FASTOR_PATCHLEVEL 4
+#define FASTOR_PATCHLEVEL 5
 #define FASTOR_VERSION (FASTOR_MAJOR * 10000 + FASTOR_MINOR * 100 + FASTOR_PATCHLEVEL)
 //------------------------------------------------------------------------------------------------//
 
@@ -160,8 +160,8 @@ SOFTWARE.
 // Assertions
 //------------------------------------------------------------------------------------------------//
 namespace Fastor {
-// Strong unconditional assert
-FASTOR_INLINE void FASTOR_EXIT_ASSERT(bool cond, const std::string &msg="") {
+// Strong unconditional assert - avoid std::string overloads as it allocates [issue 173]
+FASTOR_INLINE void FASTOR_EXIT_ASSERT(bool cond, const char* msg = nullptr) {
     if (cond==false) {
         throw std::runtime_error(msg);
     }
@@ -174,11 +174,19 @@ FASTOR_INLINE void FASTOR_EXIT_ASSERT(bool cond, const std::string &msg="") {
 #endif
 
 // Warn
-FASTOR_INLINE void FASTOR_WARN(bool cond, const std::string &x) {
+FASTOR_INLINE void FASTOR_WARN(bool cond, const char* msg) {
     if (cond==false) {
-        std::cout << x << std::endl;
+        std::cout << msg << std::endl;
     }
 }
+
+// For unittests - avoid std::string overloads as it allocates [issue 173]
+FASTOR_INLINE void FASTOR_DOES_CHECK_PASS(bool cond, const char* msg = nullptr) {
+    if (cond==false) {
+        throw std::runtime_error(msg);
+    }
+}
+
 } // end of namespace Fastor
 //------------------------------------------------------------------------------------------------//
 
